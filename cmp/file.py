@@ -62,4 +62,3 @@ class CMPFile:
             diff += (ss >> 3)
             diff *= -1 if bits[3] == 1 else 1
             self._waveform.append(self._waveform[-1] + diff)
-            logging.debug(f"Curr waveform val: {self._waveform[-1]}")

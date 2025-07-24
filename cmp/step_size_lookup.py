@@ -1,3 +1,6 @@
+import logging
+
+
 class StepSizeLookup:
     """
         An interface for looking up CPM step sizes.
