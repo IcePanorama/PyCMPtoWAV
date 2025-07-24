@@ -10,7 +10,6 @@ class CMPFile:
         See: https://en.wikipedia.org/wiki/Dialogic_ADPCM
         See: https://people.cs.ksu.edu/~tim/vox/dialogic_adpcm.pdf
     """
-    _SAMPLE_RATE_HERTZ: int = 22500
 
     def __init__(self, filename: str):
         self._filename: str = filename
@@ -25,6 +24,14 @@ class CMPFile:
 
         self._process_data(raw_data)
         self._decode_waveform()
+
+    @property
+    def filename(self) -> str:
+        return self._filename
+
+    @property
+    def waveform(self) -> [int]:
+        return self._waveform
 
     def _process_data(self, data: bytes) -> None:
         """
