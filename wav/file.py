@@ -5,6 +5,7 @@ import logging
 
 class WaveformAudioFile:
     """
+        Output is a signed, 24-bit PCM WAV.
         See: https://en.wikipedia.org/wiki/WAV
     """
     _BYTE_ORDER = "little"
@@ -31,11 +32,11 @@ class WaveformAudioFile:
             See: https://en.wikipedia.org/wiki/WAV#WAV_file_header
         """
         # bits per sample
-        bpsamp: int = WaveformAudioFile._BYTES_PER_SAMPLE * 8
+        bpsamp: int = self._BYTES_PER_SAMPLE * 8
         # bits per bloc = nChannels * bits per sample / 8
         bpb: int = (1 * bpsamp) >> 3
         # bytes per sec = freq * bytes per bloc
-        bpsec: int = WaveformAudioFile._SAMPLE_RATE_HZ * bpb
+        bpsec: int = self._SAMPLE_RATE_HZ * bpb
 
         """ Master RIFF chunk """
         fptr.write(b"RIFF")
@@ -45,16 +46,15 @@ class WaveformAudioFile:
         """ Fmt chunk """
         fptr.write(b"fmt ")  # added space is intentional
         # chunk bloc size
-        fptr.write(0x10.to_bytes(4, WaveformAudioFile._BYTE_ORDER))
+        fptr.write(0x10.to_bytes(4, self._BYTE_ORDER))
         # PCM integer format
-        fptr.write(0x1.to_bytes(2, WaveformAudioFile._BYTE_ORDER))
+        fptr.write(0x1.to_bytes(2, self._BYTE_ORDER))
         # Mono audio (1 channel)
-        fptr.write(0x1.to_bytes(2, WaveformAudioFile._BYTE_ORDER))
-        fptr.write(WaveformAudioFile._SAMPLE_RATE_HZ.to_bytes(
-            4, WaveformAudioFile._BYTE_ORDER))
-        fptr.write(bpsec.to_bytes(4, WaveformAudioFile._BYTE_ORDER))
-        fptr.write(bpb.to_bytes(2, WaveformAudioFile._BYTE_ORDER))
-        fptr.write((bpsamp).to_bytes(2, WaveformAudioFile._BYTE_ORDER))
+        fptr.write(0x1.to_bytes(2, self._BYTE_ORDER))
+        fptr.write(self._SAMPLE_RATE_HZ.to_bytes(4, self._BYTE_ORDER))
+        fptr.write(bpsec.to_bytes(4, self._BYTE_ORDER))
+        fptr.write(bpb.to_bytes(2, self._BYTE_ORDER))
+        fptr.write((bpsamp).to_bytes(2, self._BYTE_ORDER))
 
         """ Data chunk """
         fptr.write(b"data")
@@ -70,20 +70,18 @@ class WaveformAudioFile:
         rem: int = file_size - 8
         logging.debug("Remaining file size after RIFF header: " +
                       f"{file_size - 8}")
-        fptr.write((file_size - 8)
-                   .to_bytes(4, WaveformAudioFile._BYTE_ORDER))
+        fptr.write((file_size - 8) .to_bytes(4, self._BYTE_ORDER))
         fptr.seek(0x28, 0)  # Sampled data size
         rem = file_size - fptr.tell() + 4
         logging.debug(f"Sampled data size: {rem}")
-        fptr.write(rem.to_bytes(4, WaveformAudioFile._BYTE_ORDER))
+        fptr.write(rem.to_bytes(4, self._BYTE_ORDER))
 
     def export(self):
         with open(self._filename, "wb") as fptr:
             self._write_header(fptr)
             sample: int
             for sample in self._cmp.waveform:
-                logging.debug(f"Sample: {sample}")
+                # logging.debug(f"Sample: {sample}")
                 fptr.write(sample.to_bytes(
-                    WaveformAudioFile._BYTES_PER_SAMPLE,
-                    WaveformAudioFile._BYTE_ORDER))
+                    self._BYTES_PER_SAMPLE, self._BYTE_ORDER))
             self._write_size_data(fptr)
