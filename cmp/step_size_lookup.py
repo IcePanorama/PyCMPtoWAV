@@ -6,7 +6,7 @@ class StepSizeLookup:
     # Used to index into our adjustment factor lookup table. "Values greater
     # than 3 will increase the size step. Values less than 4 decrease the step
     # size."
-    _ADJUST_FACT_LOOKUP_KEY: dict(int, int) = {
+    _ADJUST_FACT_LOOKUP_KEY: {int, int} = {
         7: 8,
         6: 6,
         5: 4,

@@ -1,5 +1,6 @@
 import logging
 import os
+from cmp.step_size_lookup import StepSizeLookup
 
 
 class CMPFile:
@@ -15,6 +16,7 @@ class CMPFile:
         self._filename: str = filename
         self._size_bytes: int = os.path.getsize(self._filename)
         self._samples: [int] = []
+        self._waveform: [int] = [0]
 
         raw_data: bytes
         logging.info(f"Creating CMP file from {filename}")
@@ -22,12 +24,14 @@ class CMPFile:
             raw_data = fptr.read()
 
         self._process_data(raw_data)
+        self._decode_waveform()
 
     def _process_data(self, data: bytes) -> None:
         """
             Creates sample data from raw binary data.
             See: "Dialogic ADPCM Algorithm", pg. 3
         """
+        logging.info("Processing raw binary data.")
         b: int
         for b in data:
             curr: [int] = [(b & 0xFF) >> 4, b & 0xF]
@@ -42,3 +46,20 @@ class CMPFile:
         out: int = sample & 7  # 3 LSBs = magnitude
         sign: int = (sample & 8) >> 3  # MSB = sign
         return out if sign == 0 else -out
+
+    def _decode_waveform(self) -> None:
+        logging.info("Decoding waveform.")
+
+        s: int
+        for s in self._samples:
+            ss: int = StepSizeLookup.get_step_size(StepSizeLookup.get_key(s))
+            bits: [int] = [s & 1, s & 2, s & 4, s & 8]
+
+            # See: "Dialogic ADPCM Algorithm", pg. 5
+            diff: int = ss * bits[2]
+            diff += (ss >> 1) * bits[1]
+            diff += (ss >> 2) * bits[0]
+            diff += (ss >> 3)
+            diff *= -1 if bits[3] == 1 else 1
+            self._waveform.append(self._waveform[-1] + diff)
+            logging.debug(f"Curr waveform val: {self._waveform[-1]}")
