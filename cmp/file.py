@@ -22,7 +22,6 @@ class CMPFile:
             raw_data = fptr.read()
 
         self._process_data(raw_data)
-        print(self._samples)
 
     def _process_data(self, data: bytes) -> None:
         """
