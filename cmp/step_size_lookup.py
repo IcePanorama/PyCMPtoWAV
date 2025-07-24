@@ -6,7 +6,6 @@ class StepSizeLookup:
     # Used to index into our adjustment factor lookup table. "Values greater
     # than 3 will increase the size step. Values less than 4 decrease the step
     # size."
-    # See: "Dialogic ADPCM Algorithm", pg. 6
     _ADJUST_FACT_LOOKUP_KEY: dict(int, int) = {
         7: 8,
         6: 6,
