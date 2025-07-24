@@ -6,6 +6,8 @@ class CMPFile:
     """
         Harvester's 22.5 kHz Dialogic (VOX) ADPCM sound files, used for music
         and voice lines.
+        See: https://en.wikipedia.org/wiki/Dialogic_ADPCM
+        See: https://people.cs.ksu.edu/~tim/vox/dialogic_adpcm.pdf
     """
     _SAMPLE_RATE_HERTZ: int = 22500
 
@@ -13,8 +15,8 @@ class CMPFile:
         self._filename: str = filename
         self._size_bytes: int = os.path.getsize(self._filename)
         self._samples: [int] = []
-        raw_data: bytes
 
+        raw_data: bytes
         logging.info(f"Creating CMP file from {filename}")
         with open(self._filename, "rb") as fptr:
             raw_data = fptr.read()
