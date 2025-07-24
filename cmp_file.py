@@ -12,6 +12,7 @@ class CMPFile:
     def __init__(self, filename: str):
         self._filename: str = filename
         self._size_bytes: int = os.path.getsize(self._filename)
+        self._samples: [int] = []
         raw_data: bytes
 
         logging.info(f"Creating CMP file from {filename}")
@@ -22,10 +23,12 @@ class CMPFile:
         print(self._samples)
 
     def _process_data(self, data: bytes) -> None:
-        self._samples: [int] = []
+        """
+            Creates sample data from raw binary data.
+            See: "Dialogic ADPCM Algorithm", pg. 3
+        """
         b: int
         for b in data:
-            # See: "Dialogic ADPCM Algorithm", pg. 3
             curr: [int] = [(b & 0xFF) >> 4, b & 0xF]
             curr = [self._sample_to_signed_int(s) for s in curr]
             self._samples.extend(curr)
