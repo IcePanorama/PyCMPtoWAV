@@ -65,7 +65,7 @@ class WaveformAudioFile:
             Need to now export the data we skipped in `_write_header`.
         """
         file_size: int = fptr.tell()
-        logging.debug(f"File size: {file_size}")
+        logging.debug(f"File size: {file_size} ({file_size:X})")
         fptr.seek(4, 0)  # file size
         rem: int = file_size - 8
         logging.debug("Remaining file size after RIFF header: " +
@@ -81,7 +81,7 @@ class WaveformAudioFile:
             self._write_header(fptr)
             sample: int
             for sample in self._cmp.waveform:
-                # logging.debug(f"Sample: {sample}")
                 fptr.write(sample.to_bytes(
-                    self._BYTES_PER_SAMPLE, self._BYTE_ORDER))
+                    self._BYTES_PER_SAMPLE, self._BYTE_ORDER, signed=True))
+
             self._write_size_data(fptr)

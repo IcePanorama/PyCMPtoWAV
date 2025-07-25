@@ -31,10 +31,11 @@ class StepSizeLookup:
     @staticmethod
     def get_key(sample: int) -> int:
         """
-            Given a 4-bit signed sample, this returns the adjusment factor for
-            indexing the lookup table.
+            Given a sample, this returns the adjustment factor for indexing the
+            lookup table.
         """
-        return StepSizeLookup._ADJUST_FACT_LOOKUP_KEY[sample & 7]
+        # logging.debug("sample: {} (abs: {})".format(sample, abs(sample)))
+        return StepSizeLookup._ADJUST_FACT_LOOKUP_KEY[abs(sample)]
 
     @staticmethod
     def get_step_size(adj_fact: int) -> int:

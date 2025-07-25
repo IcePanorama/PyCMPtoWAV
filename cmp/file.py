@@ -24,6 +24,10 @@ class CMPFile:
 
         self._process_data(raw_data)
         self._decode_waveform()
+        """
+        for i in range(5):
+            print("{:X}".format(self._waveform[i]))
+        """
 
     @property
     def filename(self) -> str:
@@ -41,7 +45,7 @@ class CMPFile:
         logging.info("Processing raw binary data.")
         b: int
         for b in data:
-            curr: [int] = [(b & 0xFF) >> 4, b & 0xF]
+            curr: [int] = [(b & 0xF0) >> 4, b & 0xF]
             curr = [self._sample_to_signed_int(s) for s in curr]
             self._samples.extend(curr)
 
@@ -60,8 +64,12 @@ class CMPFile:
         s: int
         for s in self._samples:
             ss: int = StepSizeLookup.get_step_size(StepSizeLookup.get_key(s))
-            bits: [int] = [s & 1, s & 2, s & 4, s & 8]
-
+            bits: [int] = [
+                (s & 1),
+                (s & 2) >> 1,
+                (s & 4) >> 2,
+                (s & 8) >> 3
+            ]
             # See: "Dialogic ADPCM Algorithm", pg. 5
             diff: int = ss * bits[2]
             diff += (ss >> 1) * bits[1]
@@ -69,3 +77,5 @@ class CMPFile:
             diff += (ss >> 3)
             diff *= -1 if bits[3] == 1 else 1
             self._waveform.append(self._waveform[-1] + diff)
+
+        self._waveform = self._waveform[1:]  # skip filler byte
