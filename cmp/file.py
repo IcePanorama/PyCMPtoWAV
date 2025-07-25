@@ -24,10 +24,6 @@ class CMPFile:
 
         self._process_data(raw_data)
         self._decode_waveform()
-        """
-        for i in range(5):
-            print("{:X}".format(self._waveform[i]))
-        """
 
     @property
     def filename(self) -> str:
@@ -46,36 +42,35 @@ class CMPFile:
         b: int
         for b in data:
             curr: [int] = [(b & 0xF0) >> 4, b & 0xF]
-            curr = [self._sample_to_signed_int(s) for s in curr]
             self._samples.extend(curr)
-
-    def _sample_to_signed_int(self, sample: int) -> int:
-        """
-            Converts unsigned 4-bit int to a signed one.
-            See: "Dialogic ADPCM Algorithm", pg. 3
-        """
-        out: int = sample & 7  # 3 LSBs = magnitude
-        sign: int = (sample & 8) >> 3  # MSB = sign
-        return out if sign == 0 else -out
 
     def _decode_waveform(self) -> None:
         logging.info("Decoding waveform.")
 
         s: int
         for s in self._samples:
-            ss: int = StepSizeLookup.get_step_size(StepSizeLookup.get_key(s))
+            ss: int = StepSizeLookup.get_step_size(s)
             bits: [int] = [
                 (s & 1),
                 (s & 2) >> 1,
                 (s & 4) >> 2,
                 (s & 8) >> 3
             ]
+
             # See: "Dialogic ADPCM Algorithm", pg. 5
             diff: int = ss * bits[2]
             diff += (ss >> 1) * bits[1]
             diff += (ss >> 2) * bits[0]
             diff += (ss >> 3)
             diff *= -1 if bits[3] == 1 else 1
-            self._waveform.append(self._waveform[-1] + diff)
+            self._waveform.append(
+                max(
+                    -2048,
+                    min(
+                        self._waveform[-1] + diff,
+                        2048
+                    )
+                )
+            )
 
         self._waveform = self._waveform[1:]  # skip filler byte

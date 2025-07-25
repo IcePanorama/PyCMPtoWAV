@@ -1,4 +1,4 @@
-import logging
+from typing import List
 
 
 class StepSizeLookup:
@@ -9,18 +9,9 @@ class StepSizeLookup:
     # Used to index into our adjustment factor lookup table. "Values greater
     # than 3 will increase the size step. Values less than 4 decrease the step
     # size."
-    _ADJUST_FACT_LOOKUP_KEY: {int, int} = {
-        7: 8,
-        6: 6,
-        5: 4,
-        4: 2,
-        3: -1,
-        2: -1,
-        1: -1,
-        0: -1
-    }
+    _ADJUST_FACT: List[int] = [-1, -1, -1, -1, 2, 4, 6, 8]
 
-    _STEP_SIZES: [int] = [
+    _STEP_SIZES: List[int] = [
         16, 17, 19, 21, 23, 25, 28, 31, 34, 37, 41, 45, 50, 55, 60, 66, 73, 80,
         88, 97, 107, 118, 130, 143, 157, 173, 190, 209, 230, 253, 279, 307,
         337, 371, 408, 449, 494, 544, 598, 658, 724, 796, 876, 963, 1060, 1166,
@@ -29,20 +20,18 @@ class StepSizeLookup:
     _curr_step_size_idx: int = 0
 
     @staticmethod
-    def get_key(sample: int) -> int:
+    def get_step_size(sample: int) -> int:
         """
-            Given a sample, this returns the adjustment factor for indexing the
-            lookup table.
+            Returns the current step size from the lookup table given `sample`.
         """
-        # logging.debug("sample: {} (abs: {})".format(sample, abs(sample)))
-        return StepSizeLookup._ADJUST_FACT_LOOKUP_KEY[abs(sample)]
+        StepSizeLookup._curr_step_size_idx += \
+            StepSizeLookup._ADJUST_FACT[sample & 7]
+        StepSizeLookup._curr_step_size_idx = max(
+            0,
+            min(
+                StepSizeLookup._curr_step_size_idx,
+                len(StepSizeLookup._STEP_SIZES) - 1
+            )
+        )
 
-    @staticmethod
-    def get_step_size(adj_fact: int) -> int:
-        """
-            Returns the current step size from the lookup table given an
-            adjustment factor, `adj_fact`.
-        """
-        StepSizeLookup._curr_step_size_idx += adj_fact
-        StepSizeLookup._curr_step_size_idx %= len(StepSizeLookup._STEP_SIZES)
         return StepSizeLookup._STEP_SIZES[StepSizeLookup._curr_step_size_idx]

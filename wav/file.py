@@ -10,7 +10,7 @@ class WaveformAudioFile:
     """
     _BYTE_ORDER = "little"
     _SAMPLE_RATE_HZ: int = 22050  # Harvester's wav files use this sample rate
-    _BYTES_PER_SAMPLE = 3
+    _BYTES_PER_SAMPLE = 2  # Decoded output is 12-bits
 
     def __init__(self, cmp: CMPFile, filename: str = ""):
         self._cmp = cmp
@@ -82,7 +82,6 @@ class WaveformAudioFile:
     def export(self):
         with open(self._filename, "wb", buffering=0) as fptr:
             self._write_header(fptr)
-            # breakpoint()
             sample: int
             for sample in self._cmp.waveform:
                 fptr.write(sample.to_bytes(
