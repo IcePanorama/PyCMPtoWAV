@@ -1,6 +1,7 @@
 import logging
 import os
 from cmp.step_size_lookup import StepSizeLookup
+from typing import List
 
 
 class CMPFile:
@@ -14,8 +15,8 @@ class CMPFile:
     def __init__(self, filename: str):
         self._filename: str = filename
         self._size_bytes: int = os.path.getsize(self._filename)
-        self._samples: [int] = []
-        self._waveform: [int] = [0]
+        self._samples: List[int] = []
+        self._waveform: List[int] = [0]
 
         raw_data: bytes
         logging.info(f"Creating CMP file from {filename}")
@@ -50,7 +51,7 @@ class CMPFile:
         s: int
         for s in self._samples:
             ss: int = StepSizeLookup.get_step_size(s)
-            bits: [int] = [
+            bits: List[int] = [
                 (s & 1),
                 (s & 2) >> 1,
                 (s & 4) >> 2,
