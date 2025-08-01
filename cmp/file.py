@@ -32,6 +32,9 @@ class CMPFile:
 
     @property
     def waveform(self) -> [int]:
+        """
+            Signed 12-bit PCM "linear output sample" waveform.
+        """
         return self._waveform
 
     def _process_data(self, data: bytes) -> None:
