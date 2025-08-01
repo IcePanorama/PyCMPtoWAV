@@ -19,11 +19,14 @@ class WaveformAudioFile:
             cmp.filename)
 
     def _create_filename(self, cmp_filename: str) -> str:
+        """
+            Removes the extension from `cmp_filename` and replaces it with
+            `.wav`.
+        """
         ext_idx: int = cmp_filename.find(".")
         if ext_idx == -1:
             return cmp_filename + ".wav"
-        name: str = cmp_filename[:ext_idx + 1] + "wav"
-        return name
+        return cmp_filename[:ext_idx + 1] + "wav"
 
     def _normalize_waveform(self, waveform: List[int]) -> List[int]:
         """
@@ -41,9 +44,7 @@ class WaveformAudioFile:
         return [int(s * UW_MAX - HALF_UW_MAX) for s in work]
 
     def _write_header(self, fptr: BufferedWriter):
-        """
-        See: https://en.wikipedia.org/wiki/WAV#WAV_file_header
-        """
+        """ See: https://en.wikipedia.org/wiki/WAV#WAV_file_header """
         """ Master RIFF chunk """
         fptr.write(b"RIFF")
         fptr.seek(4, 1)  # skipping file size for now
@@ -72,9 +73,7 @@ class WaveformAudioFile:
         fptr.seek(4, 1)  # skipping sampled data size for now
 
     def _write_size_data(self, fptr: BufferedWriter):
-        """
-        Need to now export the data we skipped in `_write_header`.
-        """
+        """ Exports the header data skipped in `_write_header`. """
         file_size: int = fptr.tell()
         logging.debug(f"Output file size: {file_size} ({file_size:X})")
         fptr.seek(4, 0)
@@ -88,8 +87,10 @@ class WaveformAudioFile:
         fptr.write(rem.to_bytes(4, self._BYTE_ORDER))
 
     def export(self):
+        """ Writes the associated wav file to the current directory. """
         with open(self._filename, "wb", buffering=0) as fptr:
             self._write_header(fptr)
+
             sample: int
             for sample in self._waveform:
                 fptr.write(sample.to_bytes(self._BYTES_PER_SAMPLE,
