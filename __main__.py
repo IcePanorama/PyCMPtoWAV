@@ -5,11 +5,19 @@
 import logging
 from cmp.file import CMPFile
 from wav_file import WaveformAudioFile
+from sys import argv
+from typing import List
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.DEBUG,
                         format='[PyCMPtoWAV][%(levelname)s] %(message)s')
+    args: List[str] = argv[1:]
+    if not args:
+        logging.error("Improper usage. Usage: `python " +
+                      f"{argv[0]} path/to/file.cmp`")
 
-    cmp = CMPFile("7.cmp")
-    wave = WaveformAudioFile(cmp)
-    wave.export()
+    for arg in args:
+        logging.info(f"Processing {arg}...")
+        cmp = CMPFile(arg)
+        wave = WaveformAudioFile(cmp)
+        wave.export()
