@@ -35,8 +35,9 @@ class WaveformAudioFile:
             the range specified by `self._BYTES_PER_SAMPLE`.
         """
         U12_MAX: int = (2**12) - 1
-        HALF_U12_MAX: int = (U12_MAX + 1) >> 1
-        work: List[float] = [((s + HALF_U12_MAX) / U12_MAX) for s in waveform]
+        # HALF_U12_MAX: int = (U12_MAX + 1) >> 1
+        # work: List[float] = [((s + HALF_U12_MAX) / U12_MAX) for s in waveform]
+        work: List[float] = [((s + 0) / U12_MAX) for s in waveform]
         work = [max(0.0, min(s, 1.0)) for s in work]
 
         UW_MAX: int = (2**(self._BYTES_PER_SAMPLE << 3)) - 1
