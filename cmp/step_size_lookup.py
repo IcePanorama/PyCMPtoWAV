@@ -3,12 +3,9 @@ from typing import List
 
 class StepSizeLookup:
     """
-        An interface for looking up CPM step sizes.
+        An interface for using CMP/Dialogic (VOX) ADPCM step sizes.
         See: https://people.cs.ksu.edu/~tim/vox/dialogic_adpcm.pdf, pg. 6
     """
-    # Used to index into our adjustment factor lookup table. "Values greater
-    # than 3 will increase the size step. Values less than 4 decrease the step
-    # size."
     _ADJUST_FACT: List[int] = [-1, -1, -1, -1, 2, 4, 6, 8]
     _STEP_SIZES: List[int] = [
         16, 17, 19, 21, 23, 25, 28, 31, 34, 37, 41, 45, 50, 55, 60, 66, 73, 80,
