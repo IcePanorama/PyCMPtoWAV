@@ -67,22 +67,9 @@ class CMPFile:
             diff += (ss >> 2) * bits[0]
             diff += (ss >> 3)
             diff *= -1 if bits[3] == 1 else 1
+
             curr: int = self._waveform[-1] + diff
-            """
-            print(f"{curr=}")
-            assert (curr >= 0)
-            """
-            curr = max(0, min(curr, (2**12) - 1))
+            curr = max(-2**11, min(curr, (2**11) - 1))
             self._waveform.append(curr)
-            """
-                max(
-                    -2048,
-                    min(
-                        self._waveform[-1] + diff,
-                        2048
-                    )
-                )
-            )
-            """
 
         self._waveform = self._waveform[1:]  # skip filler byte
