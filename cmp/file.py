@@ -6,25 +6,41 @@ from typing import List
 
 class CMPFile:
     """
-        Harvester's 22.5 kHz Dialogic (VOX) ADPCM sound files, used for music
-        and voice lines.
+        Harvester's ADPCM sound files, used for music and voice lines.
         See: https://en.wikipedia.org/wiki/Dialogic_ADPCM
         See: https://people.cs.ksu.edu/~tim/vox/dialogic_adpcm.pdf
     """
 
     def __init__(self, filename: str):
-        self._filename: str = filename
-
-        raw_data: bytes
         logging.info(f"Creating CMP object from file: {filename}")
+        self._filename: str = filename
+        self._size: int
+        self._sampling_rate: int
+
+        logging.debug("Reading data from file...")
+        raw_data: bytes
         with open(self._filename, "rb") as fptr:
             raw_data = fptr.read()
 
-        # Verify file signature
+        logging.debug("Verifying file signature...")
         sig: str = "".join(chr(c) for c in raw_data[:4])
+        raw_data = raw_data[4:]
         if (sig != "FCMP"):
             raise RuntimeError(f"'{filename}' is not a CMP file "
                                + f"(file signature: `{sig:4}`).")
+
+        def le_bytes_to_int(b: List[int]) -> int:
+            assert (len(b) == 4)  # Only need to handle 32 bit values here.
+            return b[0] | (b[1] << 8) | (b[2] << 16) | (b[3] << 24)
+
+        self._size = le_bytes_to_int(raw_data[:4])
+        raw_data = raw_data[4:]
+        logging.debug(f"ADPCM waveform size (B): {self._size} "
+                      + f"(0x{self._size:08X})")
+
+        self._sampling_rate = le_bytes_to_int(raw_data[:4])
+        raw_data = raw_data[4:]
+        logging.debug(f"Sampling rate (Hz): {self._sampling_rate}")
         """
         self._size_bytes: int = os.path.getsize(self._filename)
         self._samples: List[int] = []
@@ -34,11 +50,11 @@ class CMPFile:
         self._decode_waveform()
         """
 
-    @property
+    @ property
     def filename(self) -> str:
         return self._filename
 
-    @property
+    @ property
     def waveform(self) -> [int]:
         """
             Signed 12-bit PCM "linear output sample" waveform.
