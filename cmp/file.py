@@ -9,7 +9,7 @@ class CMPFile:
     """
 
     def __init__(self, filename: str):
-        logging.info(f"Creating CMP object from file: {filename}")
+        logging.info(f"Creating CMP object from CMP object: {filename}")
         self._filename: str = filename
         self._size: int  # Size of raw ADPCM data in bytes
         self._sampling_rate: int  # in Hz
@@ -95,7 +95,7 @@ class CMPFile:
             Converts `self._samples` into a signed N-bit PCM waveform
             (`self._waveform`).
         """
-        logging.debug("Decoding PCM waveform from sample data...")
+        logging.debug("Decoding PCM waveform...")
 
         self._waveform = [0]  # default initial value
         bounds: int = 2**(self._precision - 1)  # bounds for clamping

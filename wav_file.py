@@ -13,15 +13,18 @@ class WaveformAudioFile:
         remove the first 14 bytes of your cmp file using dd like so before
         exporting: `dd if=<?>.cmp of=<?>.cmp bs=1 skip=14`
     """
-    _BYTE_ORDER: str = "little"
-    _BYTES_PER_SAMPLE: int = 4
+    _BYTE_ORDER: str = "little"  # needed for `to_bytes`
+    _BYTES_PER_SAMPLE: int = 4  # TODO: Make this command line option
 
     def __init__(self, cmp: CMPFile, filename: str = ""):
+        logging.info(f"Creating WAV object from cmp file: {cmp.filename}")
         self._sampling_rate: int = cmp.sampling_rate
         self._precision: int = cmp.precision
+        self._filename: str = \
+            filename if filename else self._create_filename(cmp.filename)
+        logging.debug(f"Output filename: {self._filename}")
+
         self._waveform: List[int] = self._normalize_waveform(cmp.waveform)
-        self._filename: str = filename if filename else self._create_filename(
-            cmp.filename)
 
     def _create_filename(self, cmp_filename: str) -> str:
         """
@@ -39,6 +42,8 @@ class WaveformAudioFile:
             waveform however, we need this value to be normalized according to
             the range specified by `self._BYTES_PER_SAMPLE`.
         """
+        logging.debug(f"Normalizing input waveform ({self._precision}-bit "
+                      + f"-> {self._BYTES_PER_SAMPLE << 3}-bit)")
         UN_MAX: int = (2**self._precision) - 1
         HALF_UN_MAX: int = (UN_MAX + 1) >> 1
         work: List[float] = [((s + HALF_UN_MAX) / UN_MAX) for s in waveform]
@@ -50,6 +55,8 @@ class WaveformAudioFile:
 
     def _write_header(self, fptr: BufferedWriter):
         """ See: https://en.wikipedia.org/wiki/WAV#WAV_file_header """
+        logging.debug("Writing header...")
+
         """ Master RIFF chunk """
         fptr.write(b"RIFF")
         fptr.seek(4, 1)  # skipping file size for now
@@ -78,8 +85,10 @@ class WaveformAudioFile:
 
     def _write_size_data(self, fptr: BufferedWriter):
         """ Exports the header data skipped in `_write_header`. """
+        logging.debug("Writing size info in header...")
+
         file_size: int = fptr.tell()
-        logging.debug(f"Output file size: {file_size} ({file_size:X})")
+        logging.debug(f"Output file size (B): {file_size} (0x{file_size:X})")
         fptr.seek(4, 0)
         rem: int = file_size - 8
         fptr.write((file_size - 8).to_bytes(4, self._BYTE_ORDER))
@@ -87,14 +96,17 @@ class WaveformAudioFile:
         """ Update sampled data size. """
         fptr.seek(0x28, 0)
         rem = file_size - fptr.tell() - 4
-        logging.debug(f"Sampled data size: {rem} ({rem:X})")
+        logging.debug(f"Sampled data size (B): {rem} (0x{rem:X})")
         fptr.write(rem.to_bytes(4, self._BYTE_ORDER))
 
     def export(self):
         """ Writes the associated wav file to the current directory. """
+        logging.info(f"Exporting file: {self._filename}")
+        # Disabling buffering as we need to accurate measure size data later
         with open(self._filename, "wb", buffering=0) as fptr:
             self._write_header(fptr)
 
+            logging.debug("Exporting waveform...")
             sample: int
             for sample in self._waveform:
                 fptr.write(sample.to_bytes(self._BYTES_PER_SAMPLE,
