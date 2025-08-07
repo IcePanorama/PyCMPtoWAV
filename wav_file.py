@@ -8,9 +8,12 @@ class WaveformAudioFile:
     """
         Output is a signed, 24-bit PCM WAV.
         See: https://en.wikipedia.org/wiki/WAV
+        NOTE: If exporting a wav via audacity to validate this program's
+        output, audacity's built in "offset" option does nothing. Manually
+        remove the first 14 bytes of your cmp file using dd like so before
+        exporting: `dd if=<?>.cmp of=<?>.cmp bs=1 skip=14`
     """
     _BYTE_ORDER: str = "little"
-    # _SAMPLE_RATE_HZ: int = 22050  # Harvester's wav files use this sample rate
     _BYTES_PER_SAMPLE: int = 4
 
     def __init__(self, cmp: CMPFile, filename: str = ""):
