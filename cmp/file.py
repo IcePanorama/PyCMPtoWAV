@@ -122,4 +122,3 @@ class CMPFile:
             self._waveform.append(curr)
 
         self._waveform = self._waveform[1:]  # skip filler byte
-        print(min(self._waveform))

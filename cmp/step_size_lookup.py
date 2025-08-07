@@ -35,6 +35,7 @@ class StepSizeLookup:
         """
             Returns the current step size from the lookup table given `sample`.
         """
+        old: int = self._curr_step_size_idx
         self._curr_step_size_idx += StepSizeLookup._ADJUST_FACT[sample & 7]
         self._curr_step_size_idx = \
             max(
@@ -45,4 +46,4 @@ class StepSizeLookup:
                 )
             )
 
-        return StepSizeLookup._STEP_SIZES[self._curr_step_size_idx]
+        return StepSizeLookup._STEP_SIZES[old]
