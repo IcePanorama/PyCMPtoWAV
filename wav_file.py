@@ -58,9 +58,8 @@ class WaveformAudioFile:
         """ Fmt chunk """
         fptr.write(b"fmt ")  # added space is intentional
         fptr.write(0x10.to_bytes(4, self._BYTE_ORDER))  # chunk bloc size
-        fptr.write(0x1.to_bytes(2, self._BYTE_ORDER))  # PCM integer format
-        # Mono audio (1 channel)
-        fptr.write(0x1.to_bytes(2, self._BYTE_ORDER))
+        fptr.write(0x01.to_bytes(2, self._BYTE_ORDER))  # PCM integer format
+        fptr.write(0x01.to_bytes(2, self._BYTE_ORDER))  # Mono audio
         fptr.write(self._sampling_rate.to_bytes(4, self._BYTE_ORDER))
 
         bpsamp: int = (self._BYTES_PER_SAMPLE << 3)  # bits per sample
