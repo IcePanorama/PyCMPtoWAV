@@ -13,10 +13,10 @@ class CMPFile:
     def __init__(self, filename: str):
         logging.info(f"Creating CMP object from file: {filename}")
         self._filename: str = filename
-        self._size: int
-        self._sampling_rate: int
-        self._samples: List[int]
-        self._waveform: List[int]
+        self._size: int  # Size of raw ADPCM data in bytes
+        self._sampling_rate: int  # in Hz
+        self._samples: List[int]  # 4-bit ADPCM samples
+        self._waveform: List[int]  # 12-bit PCM waveform
 
         logging.debug("Reading data from file...")
         raw_data: bytes
@@ -32,17 +32,16 @@ class CMPFile:
 
         def le_bytes_to_int(b: List[int]) -> int:
             """
-                Converts list of 4 bytes to a 32-bit int, treating the data as
-                being little-endian. Receiving a list less than 4 in length is
-                treated as an unhandled exception.
+                Converts list of 4 bytes into a 32-bit int, treating the data
+                as being little-endian. Receiving a list less than 4 in length
+                is treated as an unhandled exception.
             """
             assert (len(b) == 4)
             return b[0] | (b[1] << 8) | (b[2] << 16) | (b[3] << 24)
 
         self._size = le_bytes_to_int(raw_data[:4])
         raw_data = raw_data[4:]
-        logging.debug(f"ADPCM waveform size (B): {self._size} "
-                      + f"(0x{self._size:08X})")
+        logging.debug(f"Raw ADPCM size (B): {self._size} (0x{self._size:08X})")
 
         self._sampling_rate = le_bytes_to_int(raw_data[:4])
         raw_data = raw_data[4:]
@@ -68,14 +67,14 @@ class CMPFile:
             See: "Dialogic ADPCM Algorithm", pg. 3
         """
         self._samples = []
-        logging.info("Processing raw binary data.")
+        logging.debug("Extracting ADPCM samples from raw binary data...")
         b: int
         for b in data:
             curr: [int] = [(b & 0xF0) >> 4, b & 0xF]
             self._samples.extend(curr)
 
     def _decode_waveform(self) -> None:
-        logging.info("Decoding waveform.")
+        logging.debug("Decoding PCM waveform...")
 
         self._waveform = [0]
         s: int
