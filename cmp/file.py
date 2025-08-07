@@ -50,6 +50,7 @@ class CMPFile:
 
         self._precision = raw_data[0] | (raw_data[1] << 8)
         logging.debug(f"Precision (b): {self._precision}")
+        assert (self._precision == 16)
         raw_data = raw_data[2:]
 
         self._extract_samples(raw_data)
