@@ -38,7 +38,7 @@ class WaveformAudioFile:
 
     def _normalize_waveform(self, waveform: List[int]) -> List[int]:
         """
-            CMP decoded waveform is a signed 12-bit PCM "linear output sample"
+            CMP decoded waveform is a signed N-bit PCM "linear output sample"
             waveform however, we need this value to be normalized according to
             the range specified by `self._BYTES_PER_SAMPLE`.
         """
