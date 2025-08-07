@@ -1,5 +1,4 @@
 import logging
-# import os
 from cmp.step_size_lookup import StepSizeLookup
 from typing import List
 
@@ -16,6 +15,8 @@ class CMPFile:
         self._filename: str = filename
         self._size: int
         self._sampling_rate: int
+        self._samples: List[int]
+        self._waveform: List[int]
 
         logging.debug("Reading data from file...")
         raw_data: bytes
@@ -30,7 +31,12 @@ class CMPFile:
                                + f"(file signature: `{sig:4}`).")
 
         def le_bytes_to_int(b: List[int]) -> int:
-            assert (len(b) == 4)  # Only need to handle 32 bit values here.
+            """
+                Converts list of 4 bytes to a 32-bit int, treating the data as
+                being little-endian. Receiving a list less than 4 in length is
+                treated as an unhandled exception.
+            """
+            assert (len(b) == 4)
             return b[0] | (b[1] << 8) | (b[2] << 16) | (b[3] << 24)
 
         self._size = le_bytes_to_int(raw_data[:4])
@@ -41,31 +47,27 @@ class CMPFile:
         self._sampling_rate = le_bytes_to_int(raw_data[:4])
         raw_data = raw_data[4:]
         logging.debug(f"Sampling rate (Hz): {self._sampling_rate}")
-        """
-        self._size_bytes: int = os.path.getsize(self._filename)
-        self._samples: List[int] = []
-        self._waveform: List[int] = [0]
 
-        self._process_data(raw_data)
+        self._extract_samples(raw_data)
         self._decode_waveform()
-        """
 
-    @ property
+    @property
     def filename(self) -> str:
         return self._filename
 
-    @ property
+    @property
     def waveform(self) -> [int]:
         """
             Signed 12-bit PCM "linear output sample" waveform.
         """
-        return []  # self._waveform
+        return self._waveform
 
-    def _process_data(self, data: bytes) -> None:
+    def _extract_samples(self, data: bytes) -> None:
         """
-            Creates sample data from raw binary data.
+            Extracts ADPCM sample data from raw binary data.
             See: "Dialogic ADPCM Algorithm", pg. 3
         """
+        self._samples = []
         logging.info("Processing raw binary data.")
         b: int
         for b in data:
@@ -75,6 +77,7 @@ class CMPFile:
     def _decode_waveform(self) -> None:
         logging.info("Decoding waveform.")
 
+        self._waveform = [0]
         s: int
         for s in self._samples:
             ss: int = StepSizeLookup.get_step_size(s)
