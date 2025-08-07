@@ -18,6 +18,11 @@ if __name__ == "__main__":
 
     for arg in args:
         logging.info(f"Processing {arg}...")
-        cmp = CMPFile(arg)
-        wave = WaveformAudioFile(cmp)
-        wave.export()
+
+        try:
+            cmp = CMPFile(arg)
+            wave = WaveformAudioFile(cmp)
+            wave.export()
+        except RuntimeError as e:
+            logging.error(e)
+            exit(-1)

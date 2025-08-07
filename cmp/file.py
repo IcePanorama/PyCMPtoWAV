@@ -1,5 +1,5 @@
 import logging
-import os
+# import os
 from cmp.step_size_lookup import StepSizeLookup
 from typing import List
 
@@ -14,17 +14,25 @@ class CMPFile:
 
     def __init__(self, filename: str):
         self._filename: str = filename
+
+        raw_data: bytes
+        logging.info(f"Creating CMP object from file: {filename}")
+        with open(self._filename, "rb") as fptr:
+            raw_data = fptr.read()
+
+        # Verify file signature
+        sig: str = "".join(chr(c) for c in raw_data[:4])
+        if (sig != "FCMP"):
+            raise RuntimeError(f"'{filename}' is not a CMP file "
+                               + f"(file signature: `{sig:4}`).")
+        """
         self._size_bytes: int = os.path.getsize(self._filename)
         self._samples: List[int] = []
         self._waveform: List[int] = [0]
 
-        raw_data: bytes
-        logging.info(f"Creating CMP file from {filename}")
-        with open(self._filename, "rb") as fptr:
-            raw_data = fptr.read()
-
         self._process_data(raw_data)
         self._decode_waveform()
+        """
 
     @property
     def filename(self) -> str:
@@ -35,7 +43,7 @@ class CMPFile:
         """
             Signed 12-bit PCM "linear output sample" waveform.
         """
-        return self._waveform
+        return []  # self._waveform
 
     def _process_data(self, data: bytes) -> None:
         """
