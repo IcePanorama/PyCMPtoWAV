@@ -99,9 +99,10 @@ class CMPFile:
 
         self._waveform = [0]  # default initial value
         bounds: int = 2**(self._precision - 1)  # bounds for clamping
+        step_sizes: StepSizeLookup = StepSizeLookup()
         s: int
         for s in self._samples:
-            ss: int = StepSizeLookup.get_step_size(s)
+            ss: int = step_sizes.get_step_size(s)
             bits: List[int] = [
                 (s & 1),
                 (s & 2) >> 1,
@@ -121,3 +122,4 @@ class CMPFile:
             self._waveform.append(curr)
 
         self._waveform = self._waveform[1:]  # skip filler byte
+        print(min(self._waveform))

@@ -42,7 +42,7 @@ class WaveformAudioFile:
             waveform however, we need this value to be normalized according to
             the range specified by `self._BYTES_PER_SAMPLE`.
         """
-        logging.debug(f"Normalizing input waveform ({self._precision}-bit "
+        logging.debug(f"Normalizing input PCM waveform ({self._precision}-bit "
                       + f"-> {self._BYTES_PER_SAMPLE << 3}-bit)")
         UN_MAX: int = (2**self._precision) - 1
         HALF_UN_MAX: int = (UN_MAX + 1) >> 1

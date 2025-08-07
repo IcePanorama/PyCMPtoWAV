@@ -27,20 +27,22 @@ class StepSizeLookup:
         18500, 20350, 22385, 24623, 27086, 29794, 32767
     ]
     _NUM_STEP_SIZES: int = len(_STEP_SIZES)
-    _curr_step_size_idx: int = 0
 
-    @staticmethod
-    def get_step_size(sample: int) -> int:
+    def __init__(self):
+        self._curr_step_size_idx: int = 0
+
+    def get_step_size(self, sample: int) -> int:
         """
             Returns the current step size from the lookup table given `sample`.
         """
-        StepSizeLookup._curr_step_size_idx += \
-            StepSizeLookup._ADJUST_FACT[sample & 7]
-        StepSizeLookup._curr_step_size_idx = \
-            max(0,
-                min(StepSizeLookup._curr_step_size_idx,
+        self._curr_step_size_idx += StepSizeLookup._ADJUST_FACT[sample & 7]
+        self._curr_step_size_idx = \
+            max(
+                0,
+                min(
+                    self._curr_step_size_idx,
                     StepSizeLookup._NUM_STEP_SIZES - 1
-                    )
                 )
+            )
 
-        return StepSizeLookup._STEP_SIZES[StepSizeLookup._curr_step_size_idx]
+        return StepSizeLookup._STEP_SIZES[self._curr_step_size_idx]
