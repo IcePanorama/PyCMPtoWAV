@@ -5,9 +5,7 @@ from typing import List
 
 class CMPFile:
     """
-        Harvester's ADPCM sound files, used for music and voice lines.
-        See: https://en.wikipedia.org/wiki/Dialogic_ADPCM
-        See: https://people.cs.ksu.edu/~tim/vox/dialogic_adpcm.pdf
+        Harvester's (IMA) ADPCM sound files, used for music and voice lines.
     """
 
     def __init__(self, filename: str):
@@ -15,9 +13,10 @@ class CMPFile:
         self._filename: str = filename
         self._size: int  # Size of raw ADPCM data in bytes
         self._sampling_rate: int  # in Hz
-        self._precision: int  # Not 100% sure this is what this is
+        # Not 100% sure this is what this is, see note w/ assert below
+        self._precision: int
         self._samples: List[int]  # Signed 4-bit ADPCM samples
-        self._waveform: List[int]  # Signed 12-bit PCM waveform
+        self._waveform: List[int]  # Signed 16-bit PCM waveform
 
         logging.debug("Reading data from file...")
         raw_data: bytes
@@ -50,7 +49,7 @@ class CMPFile:
 
         self._precision = raw_data[0] | (raw_data[1] << 8)
         logging.debug(f"Precision (b): {self._precision}")
-        assert (self._precision == 16)
+        assert (self._precision == 16)  # Seems to always be 16?
         raw_data = raw_data[2:]
 
         self._extract_samples(raw_data)
@@ -84,23 +83,22 @@ class CMPFile:
     def _extract_samples(self, data: bytes) -> None:
         """
             Extracts ADPCM sample data from raw binary data.
-            See: "Dialogic ADPCM Algorithm", pg. 3
         """
         self._samples = []
         logging.debug("Extracting ADPCM samples from raw binary data...")
         b: int
         for b in data:
-            self._samples.extend([(b & 0xF0) >> 4, b & 0xF])
+            self._samples.extend([b & 0xF, (b & 0xF0) >> 4])
 
     def _decode_waveform(self) -> None:
         """
-            Converts `self._samples` into a signed 12-bit PCM waveform
+            Converts `self._samples` into a signed N-bit PCM waveform
             (`self._waveform`).
         """
-        logging.debug("Decoding PCM waveform...")
+        logging.debug("Decoding PCM waveform from sample data...")
 
-        self._waveform = [0]
-        lim: int = 2**(self._precision - 1)  # bounds for clamping
+        self._waveform = [0]  # default initial value
+        bounds: int = 2**(self._precision - 1)  # bounds for clamping
         s: int
         for s in self._samples:
             ss: int = StepSizeLookup.get_step_size(s)
@@ -111,7 +109,7 @@ class CMPFile:
                 (s & 8) >> 3
             ]
 
-            # See: "Dialogic ADPCM Algorithm", pg. 5
+            # See: https://people.cs.ksu.edu/~tim/vox/dialogic_adpcm.pdf, pg. 5
             diff: int = ss * bits[2]
             diff += (ss >> 1) * bits[1]
             diff += (ss >> 2) * bits[0]
@@ -119,7 +117,7 @@ class CMPFile:
             diff *= -1 if bits[3] == 1 else 1
 
             curr: int = self._waveform[-1] + diff
-            curr = max(-lim, min(curr, lim - 1))
+            curr = max(-bounds, min(curr, bounds - 1))
             self._waveform.append(curr)
 
         self._waveform = self._waveform[1:]  # skip filler byte
