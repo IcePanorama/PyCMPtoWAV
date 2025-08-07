@@ -15,8 +15,9 @@ class CMPFile:
         self._filename: str = filename
         self._size: int  # Size of raw ADPCM data in bytes
         self._sampling_rate: int  # in Hz
-        self._samples: List[int]  # 4-bit ADPCM samples
-        self._waveform: List[int]  # 12-bit PCM waveform
+        self._precision: int  # Not 100% sure this is what this is
+        self._samples: List[int]  # Signed 4-bit ADPCM samples
+        self._waveform: List[int]  # Signed 12-bit PCM waveform
 
         logging.debug("Reading data from file...")
         raw_data: bytes
@@ -47,6 +48,10 @@ class CMPFile:
         raw_data = raw_data[4:]
         logging.debug(f"Sampling rate (Hz): {self._sampling_rate}")
 
+        self._precision = raw_data[0] | (raw_data[1] << 8)
+        logging.debug(f"Precision (b): {self._precision}")
+        raw_data = raw_data[2:]
+
         self._extract_samples(raw_data)
         self._decode_waveform()
 
@@ -61,6 +66,20 @@ class CMPFile:
         """
         return self._waveform
 
+    @property
+    def sampling_rate(self) -> int:
+        """
+            The sampling rate of the decoded PCM waveform, in hertz.
+        """
+        return self._sampling_rate
+
+    @property
+    def precision(self) -> int:
+        """
+            The precision of `self.waveform`, in bits.
+        """
+        return self._precision
+
     def _extract_samples(self, data: bytes) -> None:
         """
             Extracts ADPCM sample data from raw binary data.
@@ -70,13 +89,17 @@ class CMPFile:
         logging.debug("Extracting ADPCM samples from raw binary data...")
         b: int
         for b in data:
-            curr: [int] = [(b & 0xF0) >> 4, b & 0xF]
-            self._samples.extend(curr)
+            self._samples.extend([(b & 0xF0) >> 4, b & 0xF])
 
     def _decode_waveform(self) -> None:
+        """
+            Converts `self._samples` into a signed 12-bit PCM waveform
+            (`self._waveform`).
+        """
         logging.debug("Decoding PCM waveform...")
 
         self._waveform = [0]
+        lim: int = 2**(self._precision - 1)  # bounds for clamping
         s: int
         for s in self._samples:
             ss: int = StepSizeLookup.get_step_size(s)
@@ -95,7 +118,7 @@ class CMPFile:
             diff *= -1 if bits[3] == 1 else 1
 
             curr: int = self._waveform[-1] + diff
-            curr = max(-2**11, min(curr, (2**11) - 1))
+            curr = max(-lim, min(curr, lim - 1))
             self._waveform.append(curr)
 
         self._waveform = self._waveform[1:]  # skip filler byte

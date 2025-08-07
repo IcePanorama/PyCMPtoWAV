@@ -10,11 +10,13 @@ class WaveformAudioFile:
         See: https://en.wikipedia.org/wiki/WAV
     """
     _BYTE_ORDER: str = "little"
-    _SAMPLE_RATE_HZ: int = 22050  # Harvester's wav files use this sample rate
+    # _SAMPLE_RATE_HZ: int = 22050  # Harvester's wav files use this sample rate
     _BYTES_PER_SAMPLE: int = 4
 
     def __init__(self, cmp: CMPFile, filename: str = ""):
-        self._waveform = self._normalize_waveform(cmp.waveform)
+        self._sampling_rate: int = cmp.sampling_rate
+        self._precision: int = cmp.precision
+        self._waveform: List[int] = self._normalize_waveform(cmp.waveform)
         self._filename: str = filename if filename else self._create_filename(
             cmp.filename)
 
@@ -34,9 +36,9 @@ class WaveformAudioFile:
             waveform however, we need this value to be normalized according to
             the range specified by `self._BYTES_PER_SAMPLE`.
         """
-        U12_MAX: int = (2**12) - 1
-        HALF_U12_MAX: int = (U12_MAX + 1) >> 1
-        work: List[float] = [((s + HALF_U12_MAX) / U12_MAX) for s in waveform]
+        UN_MAX: int = (2**self._precision) - 1
+        HALF_UN_MAX: int = (UN_MAX + 1) >> 1
+        work: List[float] = [((s + HALF_UN_MAX) / UN_MAX) for s in waveform]
         work = [max(0.0, min(s, 1.0)) for s in work]
 
         UW_MAX: int = (2**(self._BYTES_PER_SAMPLE << 3)) - 1
@@ -56,17 +58,17 @@ class WaveformAudioFile:
         fptr.write(0x1.to_bytes(2, self._BYTE_ORDER))  # PCM integer format
         # Mono audio (1 channel)
         fptr.write(0x1.to_bytes(2, self._BYTE_ORDER))
-        fptr.write(self._SAMPLE_RATE_HZ.to_bytes(4, self._BYTE_ORDER))
+        fptr.write(self._sampling_rate.to_bytes(4, self._BYTE_ORDER))
 
         bpsamp: int = (self._BYTES_PER_SAMPLE << 3)  # bits per sample
         # bits per bloc = nChannels * bits per sample / 8
         bpb: int = (1 * bpsamp) >> 3
         # bytes per sec = freq * bytes per bloc
-        bpsec: int = self._SAMPLE_RATE_HZ * bpb
+        bpsec: int = self._sampling_rate * bpb
 
         fptr.write(bpsec.to_bytes(4, self._BYTE_ORDER))
         fptr.write(bpb.to_bytes(2, self._BYTE_ORDER))
-        fptr.write((bpsamp).to_bytes(2, self._BYTE_ORDER))
+        fptr.write(bpsamp.to_bytes(2, self._BYTE_ORDER))
 
         """ Data chunk """
         fptr.write(b"data")
