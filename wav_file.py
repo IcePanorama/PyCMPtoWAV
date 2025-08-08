@@ -1,4 +1,6 @@
 """
+    WaveformAudioFile - An interface for creating WAVs from CMP files.
+
     Copyright (C) 2025  IcePanorama
 
     This program is free software: you can redistribute it and/or modify
@@ -21,14 +23,7 @@ from typing import List
 
 
 class WaveformAudioFile:
-    """
-        Output is a signed, 24-bit PCM WAV.
-        See: https://en.wikipedia.org/wiki/WAV
-        NOTE: If exporting a wav via audacity to validate this program's
-        output, audacity's built in "offset" option does nothing. Manually
-        remove the first 14 bytes of your cmp file using dd like so before
-        exporting: `dd if=<?>.cmp of=<?>.cmp bs=1 skip=14`
-    """
+    """ See: https://en.wikipedia.org/wiki/WAV """
     _BYTE_ORDER: str = "little"  # needed for `to_bytes`
 
     def __init__(self, cmp: CMPFile, bytes_per_sample: int = 4,

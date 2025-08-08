@@ -1,4 +1,7 @@
 """
+    StepSizeLookup - An interface for quickly looking up CMP (IMA) ADPCM step
+    sizes.
+
     Copyright (C) 2025  IcePanorama
 
     This program is free software: you can redistribute it and/or modify
