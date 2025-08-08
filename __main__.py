@@ -10,6 +10,7 @@ from wav_file import WaveformAudioFile
 
 CURR_VERSION: str = "v1.0.0b"
 bytes_per_samples: int = 4
+output_filename: str = ""
 
 
 def print_ver_info() -> None:
@@ -33,7 +34,23 @@ def print_help(exe: str) -> None:
     print(fmt.format("-B <n>, --bytes-per-sample <n>",
           "Set output bytes per sample to <n> bytes (default: 4)"))
     print(fmt.format("-h, --help", "Print this help message"))
+    print(fmt.format("-o <fname>, --output <fname>",
+          "Set output filename to <fname>"))
     print(fmt.format("-v, --version", "Print version information"))
+
+
+def extract_files(files: List[int]) -> None:
+    for arg in args:
+        logging.info(f"Processing {arg}...")
+
+        try:
+            cmp = CMPFile(arg)
+            wave = WaveformAudioFile(cmp, bytes_per_sample=bytes_per_samples,
+                                     filename=output_filename)
+            wave.export()
+        except RuntimeError as e:
+            logging.error(e)
+            exit(-1)
 
 
 if __name__ == "__main__":
@@ -65,19 +82,20 @@ if __name__ == "__main__":
                 logging.debug(f"Bytes per sample set to {args[i + 1]} bytes.")
                 bytes_per_samples = int(args[i + 1])
                 i += 1
+            elif (a == "-o") or (a == "--output"):
+                if (i + 1 >= args_len):
+                    raise RuntimeError(improper_usage_err_msg)
+                output_filename = args[i + 1]
+                i += 1
+            else:
+                break
             i += 1
     except RuntimeError as e:
         logging.error(e)
         exit(-1)
 
-    args = args[max(0, i - 1):]
-    for arg in args:
-        logging.info(f"Processing {arg}...")
+    args = args[i:]
+    if output_filename:
+        args = args[:1]
 
-        try:
-            cmp = CMPFile(arg)
-            wave = WaveformAudioFile(cmp, bytes_per_sample=bytes_per_samples)
-            wave.export()
-        except RuntimeError as e:
-            logging.error(e)
-            exit(-1)
+    extract_files(args)
