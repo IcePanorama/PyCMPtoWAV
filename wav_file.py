@@ -20,7 +20,7 @@ class WaveformAudioFile:
         logging.info(f"Creating WAV object from cmp file: {cmp.filename}")
         self._sampling_rate: int = cmp.sampling_rate
         self._precision: int = cmp.precision
-        self._BYTES_PER_SAMPLE: int = bytes_per_sample
+        self._bytes_per_sample: int = bytes_per_sample
         self._filename: str = \
             filename if filename else self._create_filename(cmp.filename)
         logging.debug(f"Output filename: {self._filename}")
@@ -41,16 +41,16 @@ class WaveformAudioFile:
         """
             CMP decoded waveform is a signed N-bit PCM "linear output sample"
             waveform however, we need this value to be normalized according to
-            the range specified by `self._BYTES_PER_SAMPLE`.
+            the range specified by `self._bytes_per_sample`.
         """
         logging.debug(f"Normalizing input PCM waveform ({self._precision}-bit "
-                      + f"-> {self._BYTES_PER_SAMPLE << 3}-bit)")
+                      + f"-> {self._bytes_per_sample << 3}-bit)")
         UN_MAX: int = (2**self._precision) - 1
         HALF_UN_MAX: int = (UN_MAX + 1) >> 1
         work: List[float] = [((s + HALF_UN_MAX) / UN_MAX) for s in waveform]
         work = [max(0.0, min(s, 1.0)) for s in work]
 
-        UW_MAX: int = (2**(self._BYTES_PER_SAMPLE << 3)) - 1
+        UW_MAX: int = (2**(self._bytes_per_sample << 3)) - 1
         HALF_UW_MAX: int = (UW_MAX + 1) >> 1
         return [int(s * UW_MAX - HALF_UW_MAX) for s in work]
 
@@ -70,7 +70,7 @@ class WaveformAudioFile:
         fptr.write(0x01.to_bytes(2, self._BYTE_ORDER))  # Mono audio
         fptr.write(self._sampling_rate.to_bytes(4, self._BYTE_ORDER))
 
-        bpsamp: int = (self._BYTES_PER_SAMPLE << 3)  # bits per sample
+        bpsamp: int = (self._bytes_per_sample << 3)  # bits per sample
         # bits per bloc = nChannels * bits per sample / 8
         bpb: int = (1 * bpsamp) >> 3
         # bytes per sec = freq * bytes per bloc
@@ -110,7 +110,7 @@ class WaveformAudioFile:
             logging.debug("Exporting waveform...")
             sample: int
             for sample in self._waveform:
-                fptr.write(sample.to_bytes(self._BYTES_PER_SAMPLE,
+                fptr.write(sample.to_bytes(self._bytes_per_sample,
                            self._BYTE_ORDER, signed=True))
 
             self._write_size_data(fptr)
