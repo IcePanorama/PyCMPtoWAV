@@ -45,12 +45,12 @@ def print_help(exe: str) -> None:
 
 def extract_files(files: List[int]) -> None:
     """ Extracts files using a list of paths. """
-    if not args:
+    if not files:
         raise RuntimeError(improper_usage_err_msg)
 
-    for arg in args:
-        logging.info(f"Processing {arg}...")
-        cmp = CMPFile(arg)
+    for f in files:
+        logging.info(f"Processing {f}...")
+        cmp = CMPFile(f)
         wave = WaveformAudioFile(cmp, bytes_per_sample=bytes_per_samples,
                                  filename=output_filename)
         wave.export()
