@@ -11,6 +11,9 @@ from wav_file import WaveformAudioFile
 CURR_VERSION: str = "v1.0.0b"
 bytes_per_samples: int = 4
 output_filename: str = ""
+exe_name: str = sys.argv[0]
+improper_usage_err_msg: str = f"Improper usage. Try: `python {exe_name} " \
+    + "path/to/file.cmp`"
 
 
 def print_ver_info() -> None:
@@ -40,6 +43,7 @@ def print_help(exe: str) -> None:
 
 
 def extract_files(files: List[int]) -> None:
+    """ Extracts files using a list of paths. """
     for arg in args:
         logging.info(f"Processing {arg}...")
 
@@ -48,54 +52,60 @@ def extract_files(files: List[int]) -> None:
             wave = WaveformAudioFile(cmp, bytes_per_sample=bytes_per_samples,
                                      filename=output_filename)
             wave.export()
-        except RuntimeError as e:
+        except BaseException as e:
             logging.error(e)
             exit(-1)
+
+
+def process_command_line_args(args: List[str]) -> int:
+    """
+        Process command line arugments and return the number of arguments
+        recieved. Probably not more elegant way to go about this, but it works.
+    """
+    args_len: int = len(args)
+    i: int = 0
+    global bytes_per_samples
+    global output_filename
+    while (i < args_len):
+        a: str = args[i]
+        if (a == "-v") or (a == "--version"):
+            print_ver_info()
+            exit(0)
+        elif (a == "-h") or (a == "--help"):
+            print_help(exe_name)
+            exit(0)
+        elif (a == "-B") or (a == "--bytes-per-sample"):
+            if (i + 1 >= args_len):
+                raise RuntimeError(improper_usage_err_msg)
+            logging.debug(f"Bytes per sample set to {args[i + 1]} bytes.")
+            bytes_per_samples = int(args[i + 1])
+            i += 1
+        elif (a == "-o") or (a == "--output"):
+            if (i + 1 >= args_len):
+                raise RuntimeError(improper_usage_err_msg)
+            output_filename = args[i + 1]
+            i += 1
+        else:
+            break
+        i += 1
+    return i
 
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.DEBUG,
                         format='[PyCMPtoWAV][%(levelname)s] %(message)s')
 
-    exe_name: str = sys.argv[0]
     args: List[str] = sys.argv[1:]
-    improper_usage_err_msg: str = f"Improper usage. Try: `python {exe_name} " \
-        + "path/to/file.cmp`"
     if not args:
         logging.error(improper_usage_err_msg)
         exit(-1)
 
     i: int = 0
     try:
-        args_len: int = len(args)
-        while (i < args_len):
-            a: str = args[i]
-            if (a == "-v") or (a == "--version"):
-                print_ver_info()
-                exit(0)
-            elif (a == "-h") or (a == "--help"):
-                print_help(exe_name)
-                exit(0)
-            elif (a == "-B") or (a == "--bytes-per-sample"):
-                if (i + 1 >= args_len):
-                    raise RuntimeError(improper_usage_err_msg)
-                logging.debug(f"Bytes per sample set to {args[i + 1]} bytes.")
-                bytes_per_samples = int(args[i + 1])
-                i += 1
-            elif (a == "-o") or (a == "--output"):
-                if (i + 1 >= args_len):
-                    raise RuntimeError(improper_usage_err_msg)
-                output_filename = args[i + 1]
-                i += 1
-            else:
-                break
-            i += 1
+        i = process_command_line_args(args)
     except RuntimeError as e:
         logging.error(e)
         exit(-1)
 
-    args = args[i:]
-    if output_filename:
-        args = args[:1]
-
+    args = args[i:] if not output_filename else args[i:1]
     extract_files(args)
