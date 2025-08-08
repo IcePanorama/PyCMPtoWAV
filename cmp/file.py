@@ -9,7 +9,7 @@ class CMPFile:
     """
 
     def __init__(self, filename: str):
-        logging.info(f"Creating CMP object from CMP object: {filename}")
+        logging.info(f"Creating CMP object from CMP file: {filename}")
         self._filename: str = filename
         self._size: int  # Size of raw ADPCM data in bytes
         self._sampling_rate: int  # in Hz
