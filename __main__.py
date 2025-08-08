@@ -9,6 +9,7 @@ from typing import List
 from wav_file import WaveformAudioFile
 
 CURR_VERSION: str = "v1.0.0b"
+bytes_per_samples: int = 4
 
 
 def print_ver_info() -> None:
@@ -27,11 +28,12 @@ def print_help(exe: str) -> None:
     print("Usage:")
     print(f"  python {exe_name} [options] path/to/file.dat [...]\n")
 
-    fmt: str = "  {:13} {}"
+    fmt: str = "  {:30} {}"
     print("Options:")
+    print(fmt.format("-B <n>, --bytes-per-sample <n>",
+          "Set output bytes per sample to <n> bytes (default: 4)"))
     print(fmt.format("-h, --help", "Print this help message"))
     print(fmt.format("-v, --version", "Print version information"))
-    pass
 
 
 if __name__ == "__main__":
@@ -40,26 +42,42 @@ if __name__ == "__main__":
 
     exe_name: str = sys.argv[0]
     args: List[str] = sys.argv[1:]
+    improper_usage_err_msg: str = f"Improper usage. Try: `python {exe_name} " \
+        + "path/to/file.cmp`"
     if not args:
-        logging.error(f"Improper usage. Usage: `python {exe_name} "
-                      + "path/to/file.cmp`")
+        logging.error(improper_usage_err_msg)
         exit(-1)
 
-    for a in args:
-        if (a == "-v") or (a == "--version"):
-            print_ver_info()
-        elif (a == "-h") or (a == "--help"):
-            print_help(exe_name)
+    i: int = 0
+    try:
+        args_len: int = len(args)
+        while (i < args_len):
+            a: str = args[i]
+            if (a == "-v") or (a == "--version"):
+                print_ver_info()
+                exit(0)
+            elif (a == "-h") or (a == "--help"):
+                print_help(exe_name)
+                exit(0)
+            elif (a == "-B") or (a == "--bytes-per-sample"):
+                if (i + 1 >= args_len):
+                    raise RuntimeError(improper_usage_err_msg)
+                logging.debug(f"Bytes per sample set to {args[i + 1]} bytes.")
+                bytes_per_samples = int(args[i + 1])
+                i += 1
+            i += 1
+    except RuntimeError as e:
+        logging.error(e)
+        exit(-1)
 
-    """
+    args = args[max(0, i - 1):]
     for arg in args:
         logging.info(f"Processing {arg}...")
 
         try:
             cmp = CMPFile(arg)
-            wave = WaveformAudioFile(cmp)
+            wave = WaveformAudioFile(cmp, bytes_per_sample=bytes_per_samples)
             wave.export()
         except RuntimeError as e:
             logging.error(e)
             exit(-1)
-    """

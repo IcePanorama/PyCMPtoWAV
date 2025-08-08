@@ -14,12 +14,13 @@ class WaveformAudioFile:
         exporting: `dd if=<?>.cmp of=<?>.cmp bs=1 skip=14`
     """
     _BYTE_ORDER: str = "little"  # needed for `to_bytes`
-    _BYTES_PER_SAMPLE: int = 4  # TODO: Make this command line option
 
-    def __init__(self, cmp: CMPFile, filename: str = ""):
+    def __init__(self, cmp: CMPFile, bytes_per_sample: int = 4,
+                 filename: str = ""):
         logging.info(f"Creating WAV object from cmp file: {cmp.filename}")
         self._sampling_rate: int = cmp.sampling_rate
         self._precision: int = cmp.precision
+        self._BYTES_PER_SAMPLE: int = bytes_per_sample
         self._filename: str = \
             filename if filename else self._create_filename(cmp.filename)
         logging.debug(f"Output filename: {self._filename}")
