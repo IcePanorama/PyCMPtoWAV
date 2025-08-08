@@ -36,6 +36,7 @@ def print_help(exe: str) -> None:
     print("Options:")
     print(fmt.format("-B <n>, --bytes-per-sample <n>",
           "Set output bytes per sample to <n> bytes (default: 4)"))
+    print(fmt.format("-D, --debug", "Enable debug output"))
     print(fmt.format("-h, --help", "Print this help message"))
     print(fmt.format("-o <fname>, --output <fname>",
           "Set output filename to <fname>"))
@@ -44,17 +45,15 @@ def print_help(exe: str) -> None:
 
 def extract_files(files: List[int]) -> None:
     """ Extracts files using a list of paths. """
+    if not args:
+        raise RuntimeError(improper_usage_err_msg)
+
     for arg in args:
         logging.info(f"Processing {arg}...")
-
-        try:
-            cmp = CMPFile(arg)
-            wave = WaveformAudioFile(cmp, bytes_per_sample=bytes_per_samples,
-                                     filename=output_filename)
-            wave.export()
-        except BaseException as e:
-            logging.error(e)
-            exit(-1)
+        cmp = CMPFile(arg)
+        wave = WaveformAudioFile(cmp, bytes_per_sample=bytes_per_samples,
+                                 filename=output_filename)
+        wave.export()
 
 
 def process_command_line_args(args: List[str]) -> int:
@@ -80,6 +79,8 @@ def process_command_line_args(args: List[str]) -> int:
             logging.debug(f"Bytes per sample set to {args[i + 1]} bytes.")
             bytes_per_samples = int(args[i + 1])
             i += 1
+        elif (a == "-D") or (a == "--debug"):
+            logging.getLogger().setLevel(level=logging.DEBUG)
         elif (a == "-o") or (a == "--output"):
             if (i + 1 >= args_len):
                 raise RuntimeError(improper_usage_err_msg)
@@ -92,7 +93,7 @@ def process_command_line_args(args: List[str]) -> int:
 
 
 if __name__ == "__main__":
-    logging.basicConfig(level=logging.DEBUG,
+    logging.basicConfig(level=logging.INFO,
                         format='[PyCMPtoWAV][%(levelname)s] %(message)s')
 
     args: List[str] = sys.argv[1:]
@@ -103,9 +104,8 @@ if __name__ == "__main__":
     i: int = 0
     try:
         i = process_command_line_args(args)
-    except RuntimeError as e:
+        args = args[i:] if not output_filename else args[i:1]
+        extract_files(args)
+    except BaseException as e:
         logging.error(e)
         exit(-1)
-
-    args = args[i:] if not output_filename else args[i:1]
-    extract_files(args)
