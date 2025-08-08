@@ -60,7 +60,7 @@ def extract_files(files: List[int]) -> None:
 def process_command_line_args(args: List[str]) -> int:
     """
         Process command line arugments and return the number of arguments
-        recieved. Probably not more elegant way to go about this, but it works.
+        recieved. Probably more elegant ways to go about this, but it works.
     """
     args_len: int = len(args)
     i: int = 0
