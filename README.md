@@ -10,5 +10,4 @@ Just clone the repository or download a zip using the code button above. Once yo
 $ python . path/to/file.cmp
 ```
 
-Run `python . --help` for advanced usage instructions. Python is, of course, needed in order to run this program.
-
+Run `python . --help` for advanced usage instructions.
