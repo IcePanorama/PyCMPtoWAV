@@ -16,7 +16,7 @@ class CMPFile:
         # Not 100% sure this is what this is, see note w/ assert below
         self._precision: int
         self._samples: List[int]  # Signed 4-bit ADPCM samples
-        self._waveform: List[int]  # Signed 16-bit PCM waveform
+        self._waveform: List[int]  # Signed N-bit PCM waveform
 
         logging.debug("Reading data from file...")
         raw_data: bytes
@@ -46,10 +46,13 @@ class CMPFile:
         self._sampling_rate = le_bytes_to_int(raw_data[:4])
         raw_data = raw_data[4:]
         logging.debug(f"Sampling rate (Hz): {self._sampling_rate}")
+        # TODO: make issue for this and output link to said issue to stdout
+        if self._sampling_rate == 0:
+            logging.warning(
+                "Impossible sampling rate: playback may not be possible!")
 
         self._precision = raw_data[0] | (raw_data[1] << 8)
         logging.debug(f"Precision (b): {self._precision}")
-        assert (self._precision == 16)  # Seems to always be 16?
         raw_data = raw_data[2:]
 
         self._extract_samples(raw_data)
@@ -62,7 +65,7 @@ class CMPFile:
     @property
     def waveform(self) -> [int]:
         """
-            Signed 12-bit PCM "linear output sample" waveform.
+            Signed N-bit PCM "linear output sample" waveform.
         """
         return self._waveform
 
