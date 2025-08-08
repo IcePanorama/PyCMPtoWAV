@@ -23,7 +23,7 @@ from cmp.file import CMPFile
 from typing import List
 from wav_file import WaveformAudioFile
 
-CURR_VERSION: str = "v1.0.0b"
+CURR_VERSION: str = "v1.0.0"
 bytes_per_samples: int = 4
 output_filename: str = ""
 exe_name: str = sys.argv[0]
